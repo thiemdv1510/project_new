@@ -1,0 +1,56 @@
+version: '2'
+
+services:
+    workspace:
+      container_name: social_network_workspace
+      build:
+        context: .
+        dockerfile: docker/workspace/Dockerfile
+      volumes:
+        - ./:/var/www/laravel
+      tty: true
+    php-fpm:
+      container_name: social_network_php-fpm
+      build:
+        context: .
+        dockerfile: docker/php/Dockerfile
+      volumes_from:
+        - workspace
+      expose:
+        - "2222"
+      links:
+        - workspace
+    nginx:
+      container_name: social_network_nginx
+      build:
+        context: .
+        dockerfile: docker/nginx/Dockerfile
+      volumes_from:
+        - workspace
+      ports:
+        - "80:80"
+      links:
+        - php-fpm
+    mysql:
+      container_name: social_network_mysql
+      image: mysql:5.7
+      ports:
+        - "33060:3306"
+      environment:
+        MYSQL_DATABASE: social_network
+        MYSQL_USER: admin
+        MYSQL_PASSWORD: secret
+        MYSQL_ROOT_PASSWORD: root
+    phpmyadmin:
+      container_name: social_network_phpmyadmin
+      image: phpmyadmin/phpmyadmin
+      environment:
+        PMA_ARBITRARY: 1
+        MYSQL_USER: root
+        MYSQL_PASSWORD: social_network
+        MYSQL_ROOT_PASSWORD: root
+      ports:
+        - "8085:80"
+      links:
+        - "mysql:mysql"
+
